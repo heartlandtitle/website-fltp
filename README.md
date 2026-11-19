@@ -8,7 +8,7 @@ Pages at **https://fltp.law**. Two other domains redirect to it.
 | Domain | What it does | DNS hosted at | Registered at |
 |---|---|---|---|
 | **fltp.law** | Serves the site (GitHub Pages) | Cloudflare, *RLS FIRM* account | NameSilo |
-| www.fltp.law | GitHub redirects it to fltp.law | Cloudflare | — |
+| www.fltp.law | Cloudflare 301 redirect to fltp.law | Cloudflare | — |
 | hgreid.com (+ www) | 301 redirect to fltp.law | Cloudflare, *RLS FIRM* account | check (not NameSilo DNS) |
 | floridatrustandprobate.com (+ www) | 301 redirect to fltp.law | Cloudflare, *RLS FIRM* account | check |
 
@@ -74,7 +74,7 @@ attorney's approval.** In particular:
 | A | fltp.law | 185.199.109.153 | DNS only |
 | A | fltp.law | 185.199.110.153 | DNS only |
 | A | fltp.law | 185.199.111.153 | DNS only |
-| CNAME | www | heartlandtitle.github.io | DNS only |
+| CNAME | www | heartlandtitle.github.io | **Proxied** (see below) |
 | MX ×5 | fltp.law | aspmx.l.google.com (1), alt1/alt2.aspmx.l.google.com (5), alt3/alt4.aspmx.l.google.com (10) | — |
 | TXT | fltp.law | `v=spf1 include:_spf.google.com ~all` | — |
 | TXT | fltp.law | `google-site-verification=…` | — |
@@ -84,6 +84,13 @@ attorney's approval.** In particular:
 The four A records are GitHub Pages' published IPs. **Keep them grey-cloud.**
 Turning on the Cloudflare proxy (orange cloud) breaks GitHub's certificate
 renewal.
+
+`www` is the exception: GitHub's certificate only covers `fltp.law`, so
+`https://www.fltp.law` used to fail with a certificate error. Instead, the `www`
+CNAME is proxied and a Cloudflare Redirect Rule on the fltp.law zone ("Redirect
+www to apex", `http.host eq "www.fltp.law"`) sends it to
+`https://fltp.law` + path with a 301, preserving the query string. Cloudflare
+supplies the `www` certificate; GitHub never sees `www` traffic.
 
 ### Redirect domains (hgreid.com, floridatrustandprobate.com)
 
@@ -130,7 +137,7 @@ Cloudflare needs to change.
 
 **Site down / certificate error on fltp.law.** Check
 `gh api repos/heartlandtitle/website-fltp/pages` (status, `cname`,
-`https_certificate`) and make sure the fltp.law A/CNAME records in Cloudflare
+`https_certificate`) and make sure the four fltp.law A records in Cloudflare
 are unchanged and grey-cloud. Removing and re-adding the custom domain in
 Settings → Pages forces GitHub to re-issue the certificate.
 
@@ -155,6 +162,6 @@ Things to tell Claude (also in `CLAUDE.md`):
 - Don't change page wording that falls under the content rules above without
   the attorney's sign-off.
 - Never touch the Google Workspace email records.
-- Keep the fltp.law A/CNAME records DNS only.
+- Keep the fltp.law apex A records DNS only (only `www` is proxied).
 - `rulesets entrypoint update` replaces the whole rule list for that zone —
   read the existing rules first and include them.

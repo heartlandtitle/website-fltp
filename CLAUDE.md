@@ -10,7 +10,9 @@ redirects.
   changes live immediately, so confirm with the user before pushing.
 - Never modify or delete the Google Workspace email records (MX, SPF, DKIM,
   DMARC, site verification) on any of the domains.
-- fltp.law's A/CNAME records must stay DNS only (not proxied).
+- fltp.law's apex A records must stay DNS only (not proxied). The `www`
+  CNAME is intentionally proxied; a Cloudflare redirect rule sends it to the
+  apex.
 - `cf rulesets entrypoint update` replaces all rules in that phase — fetch the
   existing ruleset first and include its rules.
 - Any new file that isn't part of the website must be added to `exclude` in
